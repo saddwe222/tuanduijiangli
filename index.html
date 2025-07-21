@@ -934,7 +934,7 @@
             // 格式化数据(印尼语)
             const formattedData = top10.map((employee, index) => {
                 const hiddenPhone = hideMiddleNumbers(employee.phone);
-                return `${index + 1}. Akun ${hiddenPhone}: ${employee.count} orang`; // 账号: orang=人
+                return `${index + 1}. Akun ${hiddenPhone}: ${employee.count} （ABC）`; // 账号: ABCorang=人
             }).join('\n');
             
             // 添加标题(印尼语)
@@ -949,13 +949,15 @@
             });
         }
         
-        // 隐藏号码中间部分(优化版)
+        // 隐藏号码中间部分，保留前两位和后五位(共保留7位)
         function hideMiddleNumbers(phone) {
-            if (phone.length <= 4) return phone;
-            const keepChars = Math.max(2, Math.floor(phone.length * 0.3)); // 至少保留2位
-            const start = phone.substring(0, keepChars);
-            const end = phone.substring(phone.length - keepChars);
-            return `${start}***${end}`;
+            if (phone.length <= 7) return phone;
+            
+            const firstTwo = phone.substring(0, 2);
+            const lastTwo = phone.substring(phone.length - 5);
+            const stars = '*'.repeat(phone.length - 7);
+            
+            return `${firstTwo}${stars}${lastTwo}`;
         }
         
         // 显示提示消息
