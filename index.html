@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工团队人数自动统计系统 | BWM</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        :root {
+            --primary: #2c3e50;
+            --primary-light: #4a6fa5;
+            --secondary: #3498db;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --gray: #6c757d;
+            --light-gray: #e9ecef;
+            --border-radius: 10px;
+            --box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f0f7ff 0%, #e1eeff 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .logo {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo i {
+            font-size: 1.8rem;
+            color: white;
+        }
+        
+        .dashboard {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stats-panel {
+            flex: 1;
+        }
+        
+        .leaderboard-panel {
+            width: 350px;
+        }
+        
+        .panel {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+        
+        .panel-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(52, 152, 219, 0.4);
+        }
+        
+        button.delete-btn {
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+        }
+        
+        button.save-btn {
+            background: linear-gradient(135deg, var(--success), #219653);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            background: white;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.95rem;
+        }
+        
+        th, td {
+            border: 1px solid var(--light-gray);
+            padding: 12px 15px;
+            text-align: center;
+        }
+        
+        th {
+            background: linear-gradient(to bottom, var(--primary-light), var(--primary));
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        
+        tr:hover {
+            background-color: #edf5ff;
+        }
+        
+        input {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            width: 100%;
+        }
+        
+        .phone-input {
+            font-weight: 600;
+        }
+        
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 15px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 10px 0;
+        }
+        
+        .stat-label {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .leaderboard {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        
+        .leaderboard ol {
+            padding-left: 0;
+            list-style: none;
+        }
+        
+        .leaderboard li {
+            margin-bottom: 10px;
+            padding: 12px 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .leaderboard li div:first-child {
+            font-weight: 600;
+            color: var(--primary);
+        }
+        
+        .leaderboard li div:last-child {
+            background: var(--primary-light);
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-top: 30px;
+        }
+        
+        /* 新增样式 */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+        
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .input-error {
+            border-color: var(--danger) !important;
+            background-color: #ffebee;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        @media (max-width: 992px) {
+            .dashboard {
+                flex-direction: column;
+            }
+            
+            .leaderboard-panel {
+                width: 100%;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+                padding-right: 70px;
+            }
+            
+            .logo {
+                top: 15px;
+                right: 15px;
+                width: 50px;
+                height: 50px;
+            }
+            
+            .controls {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            th, td {
+                padding: 10px 8px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="logo">
+                <i class="fas fa-users"></i>
+            </div>
+            <h1>员工团队人数自动统计系统</h1>
+            <p class="subtitle">BWM团队人数自动统计</p>
+        </header>
+        
+        <div class="controls">
+            <button class="save-btn" onclick="manualSave()" id="saveBtn">
+                <i class="fas fa-save"></i> 保存数据
+            </button>
+            <button onclick="resetTable()" class="delete-btn">
+                <i class="fas fa-redo"></i> 重置表格
+            </button>
+            <button onclick="exportData()" style="background: var(--warning);">
+                <i class="fas fa-file-export"></i> 导出数据
+            </button>
+            <button onclick="importData()" style="background: var(--secondary);">
+                <i class="fas fa-file-import"></i> 导入数据
+            </button>
+        </div>
+        
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-label">总记录数</div>
+                <div class="stat-value" id="totalRecords">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">独立员工数</div>
+                <div class="stat-value" id="uniqueEmployees">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">总团队人数</div>
+                <div class="stat-value" id="totalTeamMembers">0</div>
+            </div>
+        </div>
+        
+        <div class="dashboard">
+            <div class="stats-panel">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fas fa-table"></i> 员工记录表</h2>
+                        <div class="tooltip">
+                            <i class="fas fa-info-circle" style="color: var(--gray);"></i>
+                            <span class="tooltiptext">输入员工号码，系统会自动统计团队人数</span>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table id="employeeTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>员工号码</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td><input type="text" class="phone-input" placeholder="输入员工号码" onchange="validateNumber(this)" oninput="debouncedUpdate()"></td>
+                                    <td><button class="delete-btn" onclick="deleteRow(this)"><i class="fas fa-trash-alt"></i></button></td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="3" style="text-align: left;">
+                                        <button onclick="addEmployee()" style="background: var(--secondary);">
+                                            <i class="fas fa-plus"></i> 添加记录
+                                        </button>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="leaderboard-panel">
+                <div class="panel">
+                    <div class="panel-header">
+                        <h2 class="panel-title"><i class="fas fa-trophy"></i> 团队人数排行榜</h2>
+                    </div>
+                    <div class="leaderboard">
+                        <ol id="teamLeaderboard">
+                            <li style="text-align: center; padding: 15px; color: var(--gray);">暂无数据</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>© 2025 BWM团队 | 员工团队人数自动统计系统 v1.3</p>
+        </div>
+    </div>
+
+    <!-- 提示框 -->
+    <div class="toast" id="toast"></div>
+
+    <!-- 文件导入输入框 (隐藏) -->
+    <input type="file" id="fileInput" accept=".csv,.json" style="display: none;">
+
+    <script>
+        // 自动保存的键名
+        const STORAGE_KEY = 'employee_team_auto_data_v3';
+        
+        // 存储员工数据 {号码: 人数}
+        let employeeCounts = {};
+        // 存储所有记录
+        let allRecords = [];
+        // 防抖计时器
+        let debounceTimer = null;
+        // 自动保存计时器
+        let autoSaveTimer = null;
+        
+        // 初始化表格
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSavedData();
+            setupAutoSave();
+        });
+        
+        // 设置自动保存
+        function setupAutoSave() {
+            // 输入变化时自动保存(防抖)
+            document.querySelectorAll('.phone-input').forEach(input => {
+                input.addEventListener('input', debouncedUpdate);
+            });
+            
+            // 定时自动保存(每30秒)
+            autoSaveTimer = setInterval(() => {
+                if (document.hasFocus()) { // 仅当页面活跃时保存
+                    saveData(false); // 静默保存
+                }
+            }, 30000);
+            
+            // 页面卸载前保存
+            window.addEventListener('beforeunload', function(e) {
+                if (allRecords.length > 0) {
+                    saveData(false);
+                }
+            });
+        }
+        
+        // 加载保存的数据
+        function loadSavedData() {
+            showLoading('正在加载数据...');
+            
+            setTimeout(() => { // 模拟加载延迟
+                const savedData = localStorage.getItem(STORAGE_KEY);
+                
+                if (savedData) {
+                    try {
+                        const data = JSON.parse(savedData);
+                        employeeCounts = data.employeeCounts || {};
+                        allRecords = data.allRecords || [];
+                        
+                        const tbody = document.querySelector('#employeeTable tbody');
+                        tbody.innerHTML = '';
+                        
+                        // 恢复表格数据
+                        if (allRecords.length > 0) {
+                            allRecords.forEach((record, index) => {
+                                const row = addEmployee(false);
+                                row.querySelector('td:first-child').textContent = index + 1;
+                                const input = row.querySelector('.phone-input');
+                                input.value = record.phone || "";
+                                
+                                // 验证已加载的数据
+                                validateNumber(input, false);
+                            });
+                        } else {
+                            // 没有数据时添加一个空行
+                            addEmployee(false);
+                        }
+                        
+                        updateStats();
+                        updateLeaderboard();
+                        showToast('数据加载成功');
+                    } catch (e) {
+                        console.error('解析保存的数据失败:', e);
+                        showToast('加载保存的数据失败', 'error');
+                        addEmployee(false); // 添加一个空行
+                    }
+                } else {
+                    // 没有保存的数据时添加一个空行
+                    addEmployee(false);
+                }
+                
+                hideLoading();
+            }, 500);
+        }
+        
+        // 保存数据到本地存储
+        function saveData(showNotification = true) {
+            // 先更新数据
+            collectData();
+            
+            const dataToSave = {
+                employeeCounts: employeeCounts,
+                allRecords: allRecords,
+                lastSaved: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+                if (showNotification) {
+                    showToast('数据已自动保存');
+                }
+                return true;
+            } catch (e) {
+                console.error('保存数据失败:', e);
+                if (showNotification) {
+                    showToast('保存数据失败: ' + (e.message || '存储空间不足'), 'error');
+                }
+                return false;
+            }
+        }
+        
+        // 手动保存
+        function manualSave() {
+            const saveBtn = document.getElementById('saveBtn');
+            const originalHtml = saveBtn.innerHTML;
+            
+            // 显示加载状态
+            saveBtn.innerHTML = '<div class="loading"></div> 保存中...';
+            saveBtn.disabled = true;
+            
+            setTimeout(() => {
+                const success = saveData();
+                
+                // 恢复按钮状态
+                saveBtn.innerHTML = originalHtml;
+                saveBtn.disabled = false;
+                
+                if (success) {
+                    saveBtn.innerHTML = '<i class="fas fa-check"></i> 保存成功';
+                    setTimeout(() => {
+                        saveBtn.innerHTML = originalHtml;
+                    }, 2000);
+                }
+            }, 500);
+        }
+        
+        // 导出数据
+        function exportData() {
+            // 先更新数据
+            collectData();
+            
+            let csvContent = "员工号码,人数,占比\n";
+            
+            // 将员工数据转换为数组并排序
+            const sortedEmployees = Object.entries(employeeCounts)
+                .map(([phone, count]) => ({ phone, count }))
+                .sort((a, b) => b.count - a.count);
+            
+            // 计算总人数
+            const total = allRecords.length;
+            
+            sortedEmployees.forEach(employee => {
+                const percentage = total > 0 ? ((employee.count / total) * 100).toFixed(2) + '%' : '0%';
+                csvContent += `${employee.phone},${employee.count},${percentage}\n`;
+            });
+            
+            // 添加统计信息
+            csvContent += `\n统计信息\n`;
+            csvContent += `总记录数,${allRecords.length}\n`;
+            csvContent += `独立员工数,${Object.keys(employeeCounts).length}\n`;
+            csvContent += `平均每人团队人数,${total > 0 ? (allRecords.length / Object.keys(employeeCounts).length).toFixed(2) : 0}\n`;
+            csvContent += `最后更新时间,${new Date().toLocaleString()}\n`;
+            
+            const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.setAttribute('href', url);
+            link.setAttribute('download', `BWM团队人数统计_${new Date().toLocaleDateString().replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showToast('数据导出成功');
+        }
+        
+        // 导入数据
+        function importData() {
+            document.getElementById('fileInput').click();
+        }
+        
+        // 监听文件选择
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const content = e.target.result;
+                    let importedData = [];
+                    
+                    if (file.name.endsWith('.json')) {
+                        // JSON格式导入
+                        const data = JSON.parse(content);
+                        importedData = data.allRecords || [];
+                    } else {
+                        // CSV格式导入
+                        const lines = content.split('\n');
+                        lines.forEach(line => {
+                            if (line.trim() && !line.startsWith('员工号码')) {
+                                const phone = line.split(',')[0].trim();
+                                if (phone) {
+                                    importedData.push({ phone });
+                                }
+                            }
+                        });
+                    }
+                    
+                    if (importedData.length > 0) {
+                        if (confirm(`确定要导入 ${importedData.length} 条记录吗？这将覆盖当前数据。`)) {
+                            // 清空当前表格
+                            const tbody = document.querySelector('#employeeTable tbody');
+                            tbody.innerHTML = '';
+                            
+                            // 添加导入的数据
+                            importedData.forEach((record, index) => {
+                                const row = addEmployee(false);
+                                row.querySelector('td:first-child').textContent = index + 1;
+                                const input = row.querySelector('.phone-input');
+                                input.value = record.phone || "";
+                                validateNumber(input, false);
+                            });
+                            
+                            // 更新数据
+                            collectData();
+                            saveData();
+                            showToast(`成功导入 ${importedData.length} 条记录`);
+                        }
+                    } else {
+                        showToast('没有找到可导入的数据', 'warning');
+                    }
+                } catch (error) {
+                    console.error('导入数据失败:', error);
+                    showToast('导入数据失败: 文件格式不正确', 'error');
+                }
+            };
+            reader.readAsText(file);
+            
+            // 重置文件输入，允许重复选择同一文件
+            e.target.value = '';
+        });
+        
+        // 收集表格中的数据
+        function collectData() {
+            employeeCounts = {};
+            allRecords = [];
+            
+            const rows = document.querySelectorAll('#employeeTable tbody tr');
+            rows.forEach(row => {
+                const number = row.querySelector('.phone-input').value.trim();
+                if (isValidNumber(number)) {
+                    // 添加到所有记录
+                    allRecords.push({ phone: number });
+                    
+                    // 统计人数
+                    if (employeeCounts[number]) {
+                        employeeCounts[number]++;
+                    } else {
+                        employeeCounts[number] = 1;
+                    }
+                }
+            });
+        }
+        
+        // 添加新记录
+        function addEmployee(save = true) {
+            const tbody = document.querySelector('#employeeTable tbody');
+            const row = document.createElement('tr');
+            const rowNumber = tbody.children.length + 1;
+            
+            row.innerHTML = `
+                <td>${rowNumber}</td>
+                <td><input type="text" class="phone-input" placeholder="输入员工号码" onchange="validateNumber(this)" oninput="debouncedUpdate()"></td>
+                <td><button class="delete-btn" onclick="deleteRow(this)"><i class="fas fa-trash-alt"></i></button></td>
+            `;
+            
+            tbody.appendChild(row);
+            
+            // 聚焦到新添加的输入框
+            row.querySelector('.phone-input').focus();
+            
+            // 更新序号
+            updateRowNumbers();
+            
+            if (save) {
+                debouncedUpdate();
+            }
+            
+            return row;
+        }
+        
+        // 更新行号
+        function updateRowNumbers() {
+            const rows = document.querySelectorAll('#employeeTable tbody tr');
+            rows.forEach((row, index) => {
+                row.querySelector('td:first-child').textContent = index + 1;
+            });
+        }
+        
+        // 验证员工号码
+        function validateNumber(inputElement, showError = true) {
+            const number = inputElement.value.trim();
+            
+            if (number === '') {
+                inputElement.classList.remove('input-error');
+                debouncedUpdate();
+                return false;
+            }
+            
+            if (!isValidNumber(number)) {
+                if (showError) {
+                    inputElement.classList.add('input-error');
+                    showToast('请输入有效的员工号码(仅数字)', 'error');
+                }
+                return false;
+            }
+            
+            inputElement.classList.remove('input-error');
+            debouncedUpdate();
+            return true;
+        }
+        
+        // 检查员工号码是否有效(仅需是数字)
+        function isValidNumber(number) {
+            return number && /^\d+$/.test(number);
+        }
+        
+        // 防抖更新
+        function debouncedUpdate() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                updateLeaderboard();
+            }, 500);
+        }
+        
+        // 更新排行榜
+        function updateLeaderboard() {
+            collectData();
+            
+            // 更新排行榜显示
+            const leaderboard = document.getElementById('teamLeaderboard');
+            leaderboard.innerHTML = '';
+            
+            // 将员工数据转换为数组并排序
+            const sortedEmployees = Object.entries(employeeCounts)
+                .map(([phone, count]) => ({ phone, count }))
+                .sort((a, b) => b.count - a.count);
+            
+            if (sortedEmployees.length === 0) {
+                leaderboard.innerHTML = '<li style="text-align: center; padding: 15px; color: var(--gray);">暂无数据</li>';
+            } else {
+                sortedEmployees.forEach((employee, index) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div><strong>${index + 1}.</strong> ${employee.phone}</div>
+                        <div>${employee.count}人</div>
+                    `;
+                    leaderboard.appendChild(li);
+                });
+            }
+            
+            updateStats();
+            saveData(false); // 静默保存
+        }
+        
+        // 更新统计数据
+        function updateStats() {
+            document.getElementById('totalRecords').textContent = allRecords.length;
+            document.getElementById('uniqueEmployees').textContent = Object.keys(employeeCounts).length;
+            
+            // 计算总团队人数
+            let totalTeamMembers = 0;
+            for (const phone in employeeCounts) {
+                totalTeamMembers += employeeCounts[phone];
+            }
+            document.getElementById('totalTeamMembers').textContent = totalTeamMembers;
+        }
+        
+        // 删除行
+        function deleteRow(button) {
+            const row = button.closest('tr');
+            const rows = document.querySelectorAll('#employeeTable tbody tr');
+            
+            if (rows.length > 1) {
+                if (confirm('确定要删除此行吗？')) {
+                    row.classList.add('deleting');
+                    
+                    // 添加删除动画
+                    setTimeout(() => {
+                        row.remove();
+                        updateRowNumbers();
+                        updateLeaderboard();
+                        showToast('已删除记录');
+                    }, 300);
+                }
+            } else {
+                // 如果是最后一行，清空输入框而不是删除行
+                const input = row.querySelector('.phone-input');
+                input.value = '';
+                input.focus();
+                showToast('至少需要保留一条记录', 'warning');
+            }
+        }
+        
+        // 重置表格
+        function resetTable() {
+            if (allRecords.length === 0 || confirm('确定要重置表格吗？所有数据将丢失。')) {
+                const tbody = document.querySelector('#employeeTable tbody');
+                tbody.innerHTML = '';
+                employeeCounts = {};
+                allRecords = [];
+                localStorage.removeItem(STORAGE_KEY);
+                addEmployee();
+                updateLeaderboard();
+                showToast('表格已重置');
+            }
+        }
+        
+        // 显示提示消息
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = 'toast';
+            
+            // 根据类型设置背景色
+            if (type === 'error') {
+                toast.style.background = 'var(--danger)';
+            } else if (type === 'warning') {
+                toast.style.background = 'var(--warning)';
+            } else {
+                toast.style.background = 'var(--success)';
+            }
+            
+            // 显示提示
+            toast.classList.add('show');
+            
+            // 3秒后自动隐藏
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 显示加载状态
+        function showLoading(message) {
+            const toast = document.getElementById('toast');
+            toast.innerHTML = `<div class="loading"></div> ${message}`;
+            toast.className = 'toast';
+            toast.style.background = 'var(--secondary)';
+            toast.classList.add('show');
+        }
+        
+        // 隐藏加载状态
+        function hideLoading() {
+            const toast = document.getElementById('toast');
+            toast.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
