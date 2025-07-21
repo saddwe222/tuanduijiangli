@@ -377,6 +377,12 @@
                 padding: 10px 8px;
                 font-size: 0.85rem;
             }
+            
+            .panel-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
         }
     </style>
 </head>
@@ -464,6 +470,9 @@
                 <div class="panel">
                     <div class="panel-header">
                         <h2 class="panel-title"><i class="fas fa-trophy"></i> 团队人数排行榜</h2>
+                        <button onclick="copyTop10()" style="background: var(--primary); padding: 8px 15px;">
+                            <i class="fas fa-copy"></i> 复制前10
+                        </button>
                     </div>
                     <div class="leaderboard">
                         <ol id="teamLeaderboard">
@@ -475,7 +484,7 @@
         </div>
         
         <div class="footer">
-            <p>© 2025 BWM团队 | 员工团队人数自动统计系统 v1.3</p>
+            <p>© 2025 BWM团队 | 员工团队人数自动统计系统 v1.6</p>
         </div>
     </div>
 
@@ -487,7 +496,7 @@
 
     <script>
         // 自动保存的键名
-        const STORAGE_KEY = 'employee_team_auto_data_v3';
+        const STORAGE_KEY = 'employee_team_auto_data_v6';
         
         // 存储员工数据 {号码: 人数}
         let employeeCounts = {};
@@ -907,6 +916,46 @@
                 updateLeaderboard();
                 showToast('表格已重置');
             }
+        }
+        
+        // 复制前10名员工数据(印尼语版)
+        function copyTop10() {
+            // 获取前10名员工
+            const top10 = Object.entries(employeeCounts)
+                .map(([phone, count]) => ({ phone, count }))
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 10);
+            
+            if (top10.length === 0) {
+                showToast('Tidak ada data yang bisa disalin', 'warning'); // 没有可复制的数据
+                return;
+            }
+            
+            // 格式化数据(印尼语)
+            const formattedData = top10.map((employee, index) => {
+                const hiddenPhone = hideMiddleNumbers(employee.phone);
+                return `${index + 1}. Akun ${hiddenPhone}: ${employee.count} orang`; // 账号: orang=人
+            }).join('\n');
+            
+            // 添加标题(印尼语)
+            const copyText = `Daftar Ranking Tim BWM (Top 10)\n${formattedData}`;
+            
+            // 复制到剪贴板
+            navigator.clipboard.writeText(copyText).then(() => {
+                showToast('Data top 10 berhasil disalin'); // 前10名数据已复制
+            }).catch(err => {
+                console.error('Gagal menyalin:', err);
+                showToast('Gagal menyalin, silakan salin manual', 'error'); // 复制失败，请手动复制
+            });
+        }
+        
+        // 隐藏号码中间部分(优化版)
+        function hideMiddleNumbers(phone) {
+            if (phone.length <= 4) return phone;
+            const keepChars = Math.max(2, Math.floor(phone.length * 0.3)); // 至少保留2位
+            const start = phone.substring(0, keepChars);
+            const end = phone.substring(phone.length - keepChars);
+            return `${start}***${end}`;
         }
         
         // 显示提示消息
